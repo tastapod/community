@@ -13,6 +13,8 @@ target
 .idea
 .DS_Store
 .shell_history
+tags
+tmp/
 cypher/project
 cypher/lib_managed
 server/neo4j-home/data/

@@ -1,0 +1,55 @@
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="kernel" default="test">
+
+  <target name="-init">
+    <!-- resolve -->
+    <ivy:resolve log="download-only" />
+    <ivy:cachepath pathid="compile.classpath" conf="compile" />
+    <ivy:cachepath pathid="test.classpath" conf="test" />
+  </target>
+
+  <target name="compile" depends="-init">
+    <!-- compile -->
+    <mkdir dir="tmp/classes" />
+    <javac srcdir="src/main/java" destdir="tmp/classes"
+      classpathref="compile.classpath" includeantruntime="true" />
+    <copy todir="tmp/classes">
+      <fileset dir="src/main/resources" />
+    </copy>
+    <!-- jar -->
+    <mkdir dir="tmp/artifacts" />
+    <jar file="tmp/neo4j-kernel.jar" basedir="tmp/classes" />
+  </target>
+
+  <target name="compile-tests" depends="compile">
+    <mkdir dir="tmp/test-classes" />
+    <javac srcdir="src/test/java" destdir="tmp/test-classes" includeantruntime="true">
+      <classpath>
+        <path refid="test.classpath" />
+        <pathelement location="tmp/neo4j-kernel.jar" />
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="test" depends="compile-tests">
+    <mkdir dir="tmp/reports" />
+    <junit printsummary="yes" haltonfailure="yes">
+      <classpath>
+        <path refid="test.classpath" />
+        <pathelement location="tmp/test-classes" />
+        <pathelement location="tmp/neo4j-kernel.jar" />
+      </classpath>
+      <formatter type="plain"/>
+      <batchtest fork="yes" todir="tmp/reports">
+        <fileset dir="src/test/java">
+          <include name="**/Test*.java"/>
+        </fileset>
+      </batchtest>
+    </junit>
+  </target>
+
+  <target name="clean">
+    <delete dir="tmp" />
+  </target>
+
+  <target name="rebuild" depends="clean,compile" />
+</project>

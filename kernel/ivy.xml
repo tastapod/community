@@ -1,0 +1,12 @@
+<ivy-module version="2.0">
+  <info organisation="org.neo4j" module="kernel" />
+  <configurations>
+    <conf name="compile" />
+    <conf name="test" extends="compile" />
+  </configurations>
+  <dependencies>
+    <dependency org="javax.transaction" name="jta" rev="1.1" conf="compile->default" />
+    <dependency org="org.apache.felix" name="org.osgi.core" rev="1.0.0" conf="compile->default"/>
+    <dependency org="junit" name="junit" rev="4.8.2" conf="test->default"/>
+  </dependencies>
+</ivy-module>
