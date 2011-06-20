@@ -1,42 +1,73 @@
 <project xmlns:ivy="antlib:org.apache.ivy.ant" name="kernel" default="test">
 
   <target name="-init">
-    <!-- resolve -->
-    <ivy:resolve log="download-only" />
-    <ivy:cachepath pathid="compile.classpath" conf="compile" />
-    <ivy:cachepath pathid="test.classpath" conf="test" />
+    <property name="artifactId" value="neo4j-kernel" />
+    <property name="version" value="21" />
   </target>
 
-  <target name="compile" depends="-init">
+  <target name="-init-paths" depends="-init"
+      description="Resolve Ivy dependencies and set up paths">
+    <ivy:resolve log="download-only" />
+    <ivy:cachepath pathid="ivy.compile.classpath" conf="compile" />
+    <ivy:cachepath pathid="ivy.test.classpath" conf="test" />
+    <path id="compile.classpath">
+      <path refid="ivy.compile.classpath" />
+      <pathelement location="${java.home}/../lib/tools.jar" />
+    </path>
+    <path id="test.classpath">
+      <path refid="compile.classpath" />
+      <path refid="ivy.test.classpath" />
+      <pathelement location="tmp/artifacts/neo4j-kernel.jar" />
+      <pathelement location="src/test/resources" />
+    </path>
+    <property name="test.classpath" refid="test.classpath" />
+    <echo message="test.classpath=${test.classpath}" />
+  </target>
+
+  <target name="generate" depends="-init">
+    <exec osfamily="windows" executable="git.cmd" outputproperty="git.describe">
+      <arg value="describe" />
+    </exec>
+    <exec osfamily="unix" executable="git" outputproperty="git.describe">
+      <arg value="describe" />
+    </exec>
+    <mkdir dir="tmp/generated" />
+    <copy todir="tmp/generated">
+      <fileset dir="src/template/java" />
+      <filterset>
+        <filter token="artifactId" value="${artifactId}" />
+        <filter token="version" value="${version}" />
+        <filter token="git.describe" value="${git.describe}" />
+      </filterset>
+    </copy>
+  </target>
+
+  <target name="compile" depends="-init-paths, generate" description="build the module">
     <!-- compile -->
     <mkdir dir="tmp/classes" />
-    <javac srcdir="src/main/java" destdir="tmp/classes"
-      classpathref="compile.classpath" includeantruntime="true" />
+    <javac srcdir="src/main/java:tmp/generated" destdir="tmp/classes"
+      classpathref="compile.classpath" includeantruntime="false">
+    </javac>
     <copy todir="tmp/classes">
       <fileset dir="src/main/resources" />
     </copy>
     <!-- jar -->
     <mkdir dir="tmp/artifacts" />
-    <jar file="tmp/neo4j-kernel.jar" basedir="tmp/classes" />
+    <jar file="tmp/artifacts/neo4j-kernel.jar" basedir="tmp/classes" />
   </target>
 
-  <target name="compile-tests" depends="compile">
+  <target name="compile-tests" depends="compile" description="compile the tests">
     <mkdir dir="tmp/test-classes" />
-    <javac srcdir="src/test/java" destdir="tmp/test-classes" includeantruntime="true">
-      <classpath>
-        <path refid="test.classpath" />
-        <pathelement location="tmp/neo4j-kernel.jar" />
-      </classpath>
-    </javac>
+    <javac srcdir="src/test/java" destdir="tmp/test-classes"
+      classpathref="test.classpath" includeantruntime="false" />
   </target>
 
-  <target name="test" depends="compile-tests">
+  <target name="test" depends="compile-tests" description="run the tests">
     <mkdir dir="tmp/reports" />
     <junit printsummary="yes" haltonfailure="yes">
       <classpath>
         <path refid="test.classpath" />
         <pathelement location="tmp/test-classes" />
-        <pathelement location="tmp/neo4j-kernel.jar" />
       </classpath>
       <formatter type="plain"/>
       <batchtest fork="yes" todir="tmp/reports">
