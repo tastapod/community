@@ -20,6 +20,14 @@
     </path>
   </target>
 
+  <target name="print-paths" depends="-init-paths">
+      <property name="compile-classpath" refid="compile-classpath" />
+      <echo message="compile-classpath=${compile-classpath}" />
+
+      <property name="test-classpath" refid="test-classpath" />
+      <echo message="test-classpath=${test-classpath}" />
+  </target>
+
   <target name="generate-sources" depends="-init-paths">
     <exec osfamily="windows" executable="git.cmd" outputproperty="git-describe">
       <arg value="describe" />
@@ -29,7 +37,7 @@
     </exec>
     <mkdir dir="tmp/generated" />
     <copy todir="tmp/generated">
-      <fileset dir="src/template/java" />
+      <fileset dir="src/template/java" erroronmissingdir="false" />
       <filterset>
         <filter token="artifactId" value="${module}" />
         <filter token="version" value="${version}" />
@@ -41,12 +49,12 @@
   <target name="build-module" depends="-init-paths,generate-sources" description="compile the module">
     <!-- compile -->
     <mkdir dir="tmp/classes" />
-    <javac srcdir="src/main/java:tmp/generated" destdir="tmp/classes"
-      classpathref="compile-classpath" includeantruntime="false">
-    </javac>
     <copy todir="tmp/classes">
       <fileset dir="src/main/resources" />
     </copy>
+    <javac srcdir="src/main/java:tmp/generated" destdir="tmp/classes"
+      classpathref="compile-classpath" includeantruntime="false">
+    </javac>
     <!-- jar -->
     <mkdir dir="tmp/artifacts" />
     <jar file="${module-jar}" basedir="tmp/classes" />
