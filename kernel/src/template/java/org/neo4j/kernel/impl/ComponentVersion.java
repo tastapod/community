@@ -14,6 +14,6 @@ public class ComponentVersion extends Version
     @Override
     public String getRevision()
     {
-        return "@git.describe@";
+        return "@revision@";
     }
 }

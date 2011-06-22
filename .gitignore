@@ -1,6 +1,6 @@
 *~
 \#*
-target
+target/
 *.swp
 .project
 .classpath
@@ -15,12 +15,13 @@ target
 .shell_history
 tags
 tmp/
-cypher/project
-cypher/lib_managed
+distrib/
+cypher/project/
+cypher/lib_managed/
 server/neo4j-home/data/
-server/neo4j-home/rrd
+server/neo4j-home/rrd/
 server/src/main/resources/webadmin-html/js/neo4j/
 server/src/main/resources/webadmin-html/js/ribcage/
 server/src/main/resources/webadmin-html/js/webadmin.js
-artifacts
 */pom-with-build-number.xml
+artifacts/

@@ -1,72 +1,73 @@
-<project xmlns:ivy="antlib:org.apache.ivy.ant" name="kernel" default="test">
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="neo4j-kernel" default="test">
 
-  <target name="-init">
-    <property name="artifactId" value="neo4j-kernel" />
-    <property name="version" value="21" />
-  </target>
-
-  <target name="-init-paths" depends="-init"
-      description="Resolve Ivy dependencies and set up paths">
+  <target name="-init-paths" description="Resolve Ivy dependencies and set up paths">
     <ivy:resolve log="download-only" />
-    <ivy:cachepath pathid="ivy.compile.classpath" conf="compile" />
-    <ivy:cachepath pathid="ivy.test.classpath" conf="test" />
-    <path id="compile.classpath">
-      <path refid="ivy.compile.classpath" />
+    <ivy:cachepath pathid="ivy.compile-classpath" conf="compile" />
+    <ivy:cachepath pathid="ivy.test-classpath" conf="test" />
+    <property name="module" value="${ant.project.name}" />
+    <property name="version" value="${ivy.revision}" />
+    <property name="module-jar" location="tmp/artifacts/${module}-${version}.jar" />
+    <property name="source-jar" location="tmp/artifacts/${module}-src-${version}.jar" />
+    <path id="compile-classpath">
+      <path refid="ivy.compile-classpath" />
       <pathelement location="${java.home}/../lib/tools.jar" />
     </path>
-    <path id="test.classpath">
-      <path refid="compile.classpath" />
-      <path refid="ivy.test.classpath" />
-      <pathelement location="tmp/artifacts/neo4j-kernel.jar" />
+    <path id="test-classpath">
+      <path refid="compile-classpath" />
+      <path refid="ivy.test-classpath" />
+      <pathelement location="${module-jar}" />
       <pathelement location="src/test/resources" />
     </path>
-    <property name="test.classpath" refid="test.classpath" />
-    <echo message="test.classpath=${test.classpath}" />
   </target>
 
-  <target name="generate" depends="-init">
-    <exec osfamily="windows" executable="git.cmd" outputproperty="git.describe">
+  <target name="generate-sources" depends="-init-paths">
+    <exec osfamily="windows" executable="git.cmd" outputproperty="git-describe">
       <arg value="describe" />
     </exec>
-    <exec osfamily="unix" executable="git" outputproperty="git.describe">
+    <exec osfamily="unix" executable="git" outputproperty="git-describe">
       <arg value="describe" />
     </exec>
     <mkdir dir="tmp/generated" />
     <copy todir="tmp/generated">
       <fileset dir="src/template/java" />
       <filterset>
-        <filter token="artifactId" value="${artifactId}" />
+        <filter token="artifactId" value="${module}" />
         <filter token="version" value="${version}" />
-        <filter token="git.describe" value="${git.describe}" />
+        <filter token="revision" value="${git-describe}" />
       </filterset>
     </copy>
   </target>
 
-  <target name="compile" depends="-init-paths, generate" description="build the module">
+  <target name="build-module" depends="-init-paths,generate-sources" description="compile the module">
     <!-- compile -->
     <mkdir dir="tmp/classes" />
     <javac srcdir="src/main/java:tmp/generated" destdir="tmp/classes"
-      classpathref="compile.classpath" includeantruntime="false">
+      classpathref="compile-classpath" includeantruntime="false">
     </javac>
     <copy todir="tmp/classes">
       <fileset dir="src/main/resources" />
     </copy>
     <!-- jar -->
     <mkdir dir="tmp/artifacts" />
-    <jar file="tmp/artifacts/neo4j-kernel.jar" basedir="tmp/classes" />
+    <jar file="${module-jar}" basedir="tmp/classes" />
   </target>
 
-  <target name="compile-tests" depends="compile" description="compile the tests">
+  <target name="assemble-sources" depends="-init-paths,generate-sources" description="assemble the sources">
+    <mkdir dir="tmp/artifacts" />
+
+  </target>
+
+  <target name="compile-tests" description="compile the tests">
     <mkdir dir="tmp/test-classes" />
     <javac srcdir="src/test/java" destdir="tmp/test-classes"
-      classpathref="test.classpath" includeantruntime="false" />
+      classpathref="test-classpath" includeantruntime="false" />
   </target>
 
-  <target name="test" depends="compile-tests" description="run the tests">
+  <target name="run-tests" description="run the tests">
     <mkdir dir="tmp/reports" />
     <junit printsummary="yes" haltonfailure="yes">
       <classpath>
-        <path refid="test.classpath" />
+        <path refid="test-classpath" />
         <pathelement location="tmp/test-classes" />
       </classpath>
       <formatter type="plain"/>
@@ -78,9 +79,17 @@
     </junit>
   </target>
 
+  <target name="publish-artifacts" depends="-init-paths">
+    <ivy:publish resolver="local" overwrite="true"
+      artifactspattern="tmp/artifacts/[artifact]-[revision].[ext]" />
+  </target>
+
   <target name="clean">
     <delete dir="tmp" />
   </target>
 
-  <target name="rebuild" depends="clean,compile" />
+  <target name="rebuild" depends="clean,build" />
+  <target name="build" depends="generate-sources,build-module" />
+  <target name="test" depends="build,compile-tests,run-tests" />
+  <target name="all" depends="rebuild,test,publish-artifacts" />
 </project>

@@ -88,9 +88,9 @@ public class Version extends Service
         return "";
     }
 
-    protected Version( String atrifactId, String version )
+    protected Version( String artifactId, String version )
     {
-        super( atrifactId );
+        super( artifactId );
         Package pkg = getClass().getPackage();
         this.title = defaultValue( pkg.getImplementationTitle(), null );
         this.vendor = defaultValue( pkg.getImplementationVendor(), "Neo Technology" );
