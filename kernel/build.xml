@@ -2,12 +2,14 @@
 
   <target name="-init-paths" description="Resolve Ivy dependencies and set up paths">
     <ivy:resolve log="download-only" />
-    <ivy:cachepath pathid="ivy.compile-classpath" conf="compile" />
+    <ivy:cachepath pathid="ivy.compile-classpath" conf="default" />
     <ivy:cachepath pathid="ivy.test-classpath" conf="test" />
     <property name="module" value="${ant.project.name}" />
     <property name="version" value="${ivy.revision}" />
-    <property name="module-jar" location="tmp/artifacts/${module}-${version}.jar" />
-    <property name="source-jar" location="tmp/artifacts/${module}-src-${version}.jar" />
+    <property name="jars-dir" value="tmp/artifacts/jars" />
+    <property name="module-jar" location="${jars-dir}/${module}.jar" />
+    <property name="source-jar" location="${jars-dir}/${module}-source.jar" />
+    <property name="tests-jar" location="${jars-dir}/${module}-tests.jar" />
     <path id="compile-classpath">
       <path refid="ivy.compile-classpath" />
       <pathelement location="${java.home}/../lib/tools.jar" />
@@ -16,16 +18,14 @@
       <path refid="compile-classpath" />
       <path refid="ivy.test-classpath" />
       <pathelement location="${module-jar}" />
-      <pathelement location="src/test/resources" />
     </path>
   </target>
 
-  <target name="print-paths" depends="-init-paths">
+  <target name="debug" depends="-init-paths">
       <property name="compile-classpath" refid="compile-classpath" />
-      <echo message="compile-classpath=${compile-classpath}" />
-
       <property name="test-classpath" refid="test-classpath" />
-      <echo message="test-classpath=${test-classpath}" />
+      <echoproperties />
+      <ivy:report />
   </target>
 
   <target name="generate-sources" depends="-init-paths">
@@ -37,7 +37,7 @@
     </exec>
     <mkdir dir="tmp/generated" />
     <copy todir="tmp/generated">
-      <fileset dir="src/template/java" erroronmissingdir="false" />
+      <fileset dir="src/template" erroronmissingdir="false" />
       <filterset>
         <filter token="artifactId" value="${module}" />
         <filter token="version" value="${version}" />
@@ -46,37 +46,46 @@
     </copy>
   </target>
 
-  <target name="build-module" depends="-init-paths,generate-sources" description="compile the module">
-    <!-- compile -->
+  <target name="compile-sources" depends="generate-sources" description="compile the module">
     <mkdir dir="tmp/classes" />
     <copy todir="tmp/classes">
-      <fileset dir="src/main/resources" />
+      <fileset dir="src/main/resources" erroronmissingdir="false" />
     </copy>
-    <javac srcdir="src/main/java:tmp/generated" destdir="tmp/classes"
-      classpathref="compile-classpath" includeantruntime="false">
-    </javac>
-    <!-- jar -->
-    <mkdir dir="tmp/artifacts" />
-    <jar file="${module-jar}" basedir="tmp/classes" />
+    <mkdir dir="tmp/generated/java" />
+    <property name="compile-classpath" refid="compile-classpath" />
+    <echo message="Building with classpath=${compile-classpath}" />
+    <javac destdir="tmp/classes" srcdir="src/main/java:tmp/generated/java" classpathref="compile-classpath" includeantruntime="false" />
   </target>
 
-  <target name="assemble-sources" depends="-init-paths,generate-sources" description="assemble the sources">
-    <mkdir dir="tmp/artifacts" />
-
+  <target name="build-module-jar" depends="compile-sources" description="build the module jar">
+    <mkdir dir="${jars-dir}" />
+    <jar file="${module-jar}" basedir="tmp/classes">
+      <metainf dir="." includes="[A-Z]*.txt" />
+    </jar>
   </target>
 
-  <target name="compile-tests" description="compile the tests">
+  <target name="assemble-sources" depends="generate-sources" description="assemble the sources">
+    <mkdir dir="${jars-dir}" />
+    <jar file="${source-jar}">
+      <fileset dir="src/main/java" />
+      <fileset dir="tmp/generated/java" erroronmissingdir="false" />
+      <metainf dir="." includes="*.txt" />
+    </jar>
+  </target>
+
+  <target name="assemble-tests" depends="build-module-jar" description="compile the tests">
     <mkdir dir="tmp/test-classes" />
     <javac srcdir="src/test/java" destdir="tmp/test-classes"
       classpathref="test-classpath" includeantruntime="false" />
+    <jar file="${tests-jar}" basedir="tmp/test-classes" />
   </target>
 
-  <target name="run-tests" description="run the tests">
+  <target name="run-tests" depends="assemble-tests" description="run the tests">
     <mkdir dir="tmp/reports" />
     <junit printsummary="yes" haltonfailure="yes">
       <classpath>
         <path refid="test-classpath" />
-        <pathelement location="tmp/test-classes" />
+        <pathelement location="${tests-jar}" />
       </classpath>
       <formatter type="plain"/>
       <batchtest fork="yes" todir="tmp/reports">
@@ -89,15 +98,17 @@
 
   <target name="publish-artifacts" depends="-init-paths">
     <ivy:publish resolver="local" overwrite="true"
-      artifactspattern="tmp/artifacts/[artifact]-[revision].[ext]" />
+      artifactspattern="tmp/artifacts/[type]s/[artifact].[ext]" />
   </target>
 
   <target name="clean">
     <delete dir="tmp" />
+    <delete dir="distrib" />
   </target>
 
   <target name="rebuild" depends="clean,build" />
-  <target name="build" depends="generate-sources,build-module" />
-  <target name="test" depends="build,compile-tests,run-tests" />
+  <target name="build" depends="build-module-jar" />
+  <target name="test" depends="assemble-tests,run-tests" />
+  <target name="publish" depends="build,assemble-tests,assemble-sources,publish-artifacts" />
   <target name="all" depends="rebuild,test,publish-artifacts" />
 </project>
