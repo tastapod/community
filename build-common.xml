@@ -3,7 +3,7 @@
   <target name="-init-paths" description="Resolve Ivy dependencies and set up paths">
     <dirname property="common.basedir" file="${ant.file.common}" />
     <ivy:settings file="${common.basedir}/ivy-settings.xml" />
-    <ivy:resolve log="all" />
+    <ivy:resolve log="download-only" />
     <ivy:cachepath pathid="ivy.compile-classpath" conf="default" />
     <ivy:cachepath pathid="ivy.test-classpath" conf="test" />
     <property name="module" value="${ant.project.name}" />
@@ -114,5 +114,5 @@
   <target name="build" depends="build-module-jar" />
   <target name="test" depends="assemble-tests,run-tests" />
   <target name="publish" depends="build,assemble-tests,assemble-sources,publish-artifacts" />
-  <target name="all" depends="rebuild,test,publish-artifacts" />
+  <target name="all" depends="rebuild,test,publish" />
 </project>

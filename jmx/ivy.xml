@@ -4,6 +4,11 @@
     <conf name="default" />
     <conf name="test" extends="default" />
   </configurations>
+  <publications>
+    <artifact name="${ivy.module}" conf="default" />
+    <artifact name="${ivy.module}-source" conf="default" />
+    <artifact name="${ivy.module}-tests" conf="test" />
+  </publications>
   <dependencies>
     <dependency name="neo4j-kernel" rev="21" conf="*->@"/>
   </dependencies>
