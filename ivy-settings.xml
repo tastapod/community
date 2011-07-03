@@ -1,0 +1,24 @@
+<ivysettings>
+  <settings defaultResolver="with-local-m2"/>
+  <!--
+  <include url="${ivy.default.settings.dir}/ivysettings-public.xml"/>
+  <include url="${ivy.default.settings.dir}/ivysettings-shared.xml"/>
+  <include url="${ivy.default.settings.dir}/ivysettings-main-chain.xml"/>
+  <include url="${ivy.default.settings.dir}/ivysettings-default-chain.xml"/>
+  -->
+  <include url="${ivy.default.settings.dir}/ivysettings-local.xml"/>
+
+  <property name="local-maven2-pattern"
+    value="${user.home}/.m2/repository/[organisation]/[module]/[revision]/[module]-[revision](-[classifier]).[ext]"
+override="false" />
+  <resolvers>
+    <filesystem name="m2" m2compatible="true" local="true">
+      <ivy pattern="${local-maven2-pattern}"/>
+      <artifact pattern="${local-maven2-pattern}" />
+    </filesystem>
+    <chain name="with-local-m2">
+      <resolver ref="local" />
+      <resolver ref="m2" />
+    </chain>
+  </resolvers>
+</ivysettings>

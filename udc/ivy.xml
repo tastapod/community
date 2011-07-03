@@ -1,0 +1,18 @@
+<ivy-module version="2.0" xmlns:e="http://ant.apache.org/ivy/extra">
+  <info organisation="org.neo4j" module="neo4j-udc" revision="21" />
+  <configurations>
+    <conf name="default" />
+    <conf name="test" extends="default" />
+  </configurations>
+  <dependencies>
+    <dependency name="neo4j-kernel" rev="21" conf="*->@"/>
+    <dependency org="org.apache.httpcomponents" name="httpclient" rev="4.0.1" conf="test->default">
+      <artifact name="httpclient" conf="test" />
+      <artifact name="httpclient" e:classifier="tests" conf="test" />
+    </dependency>
+    <dependency org="org.apache.httpcomponents" name="httpcore" rev="4.0.1" conf="test->default">
+      <artifact name="httpcore" conf="test" />
+    </dependency>
+    <dependency org="commons-io" name="commons-io" rev="1.4" conf="test->default"/>
+  </dependencies>
+</ivy-module>

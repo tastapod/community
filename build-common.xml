@@ -1,0 +1,118 @@
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="common" default="test">
+
+  <target name="-init-paths" description="Resolve Ivy dependencies and set up paths">
+    <dirname property="common.basedir" file="${ant.file.common}" />
+    <ivy:settings file="${common.basedir}/ivy-settings.xml" />
+    <ivy:resolve log="all" />
+    <ivy:cachepath pathid="ivy.compile-classpath" conf="default" />
+    <ivy:cachepath pathid="ivy.test-classpath" conf="test" />
+    <property name="module" value="${ant.project.name}" />
+    <property name="version" value="${ivy.revision}" />
+    <property name="jars-dir" value="tmp/artifacts/jars" />
+    <property name="module-jar" location="${jars-dir}/${module}.jar" />
+    <property name="source-jar" location="${jars-dir}/${module}-source.jar" />
+    <property name="tests-jar" location="${jars-dir}/${module}-tests.jar" />
+    <path id="compile-classpath">
+      <path refid="ivy.compile-classpath" />
+      <pathelement location="${java.home}/../lib/tools.jar" />
+    </path>
+    <path id="test-classpath">
+      <path refid="compile-classpath" />
+      <path refid="ivy.test-classpath" />
+      <pathelement location="${module-jar}" />
+    </path>
+  </target>
+
+  <target name="debug" depends="-init-paths">
+      <property name="compile-classpath" refid="compile-classpath" />
+      <property name="test-classpath" refid="test-classpath" />
+      <echoproperties />
+      <ivy:report />
+  </target>
+
+  <target name="generate-sources" depends="-init-paths">
+    <exec osfamily="windows" executable="git.cmd" outputproperty="git-describe">
+      <arg value="describe" />
+    </exec>
+    <exec osfamily="unix" executable="git" outputproperty="git-describe">
+      <arg value="describe" />
+    </exec>
+    <mkdir dir="tmp/generated" />
+    <copy todir="tmp/generated">
+      <fileset dir="src/template" erroronmissingdir="false" />
+      <filterset>
+        <filter token="artifactId" value="${module}" />
+        <filter token="version" value="${version}" />
+        <filter token="revision" value="${git-describe}" />
+      </filterset>
+    </copy>
+  </target>
+
+  <target name="compile-sources" depends="generate-sources" description="compile the module">
+    <mkdir dir="tmp/classes" />
+    <copy todir="tmp/classes">
+      <fileset dir="src/main/resources" erroronmissingdir="false" />
+    </copy>
+    <mkdir dir="tmp/generated/java" />
+    <property name="compile-classpath" refid="compile-classpath" />
+    <echo message="Building with classpath=${compile-classpath}" />
+    <javac destdir="tmp/classes" srcdir="src/main/java:tmp/generated/java" classpathref="compile-classpath" includeantruntime="false" />
+  </target>
+
+  <target name="build-module-jar" depends="compile-sources" description="build the module jar">
+    <mkdir dir="${jars-dir}" />
+    <jar file="${module-jar}" basedir="tmp/classes">
+      <metainf dir="." includes="[A-Z]*.txt" />
+    </jar>
+  </target>
+
+  <target name="assemble-sources" depends="generate-sources" description="assemble the sources">
+    <mkdir dir="${jars-dir}" />
+    <jar file="${source-jar}">
+      <fileset dir="src/main/java" />
+      <fileset dir="tmp/generated/java" erroronmissingdir="false" />
+      <metainf dir="." includes="*.txt" />
+    </jar>
+  </target>
+
+  <target name="assemble-tests" depends="build-module-jar" description="compile the tests">
+    <mkdir dir="tmp/test-classes" />
+    <property name="test-classpath" refid="test-classpath" />
+    <echo message="Building tests with classpath=${test-classpath}" />
+    <javac srcdir="src/test/java" destdir="tmp/test-classes"
+      classpathref="test-classpath" includeantruntime="false" />
+    <jar file="${tests-jar}" basedir="tmp/test-classes" />
+  </target>
+
+  <target name="run-tests" depends="assemble-tests" description="run the tests">
+    <mkdir dir="tmp/reports" />
+    <junit printsummary="yes" haltonfailure="yes">
+      <classpath>
+        <path refid="test-classpath" />
+        <pathelement location="${tests-jar}" />
+      </classpath>
+      <formatter type="plain"/>
+      <batchtest fork="yes" todir="tmp/reports">
+        <fileset dir="src/test/java">
+          <include name="**/Test*.java"/>
+        </fileset>
+      </batchtest>
+    </junit>
+  </target>
+
+  <target name="publish-artifacts" depends="-init-paths">
+    <ivy:publish resolver="local" overwrite="true"
+      artifactspattern="tmp/artifacts/[type]s/[artifact].[ext]" />
+  </target>
+
+  <target name="clean">
+    <delete dir="tmp" />
+    <delete dir="distrib" />
+  </target>
+
+  <target name="rebuild" depends="clean,build" />
+  <target name="build" depends="build-module-jar" />
+  <target name="test" depends="assemble-tests,run-tests" />
+  <target name="publish" depends="build,assemble-tests,assemble-sources,publish-artifacts" />
+  <target name="all" depends="rebuild,test,publish-artifacts" />
+</project>
