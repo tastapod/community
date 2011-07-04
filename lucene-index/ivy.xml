@@ -1,0 +1,16 @@
+<ivy-module version="2.0">
+  <info organisation="org.neo4j" module="neo4j-lucene-index" revision="21" />
+  <configurations>
+    <conf name="default" />
+    <conf name="test" extends="default" />
+  </configurations>
+  <publications>
+    <artifact name="${ivy.module}" conf="default" />
+    <artifact name="${ivy.module}-source" conf="default" />
+    <artifact name="${ivy.module}-tests" conf="test" />
+  </publications>
+  <dependencies>
+    <dependency name="neo4j-kernel" rev="21" conf="*->@"/>
+    <dependency org="org.apache.lucene" name="lucene-core" rev="3.1.0" conf="default"/>
+  </dependencies>
+</ivy-module>
