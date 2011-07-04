@@ -64,7 +64,7 @@
   <target name="build-module-jar" depends="compile-sources" description="build the module jar">
     <mkdir dir="${jars-dir}" />
     <jar file="${module-jar}" basedir="tmp/classes">
-      <metainf dir="." includes="[A-Z]*.txt" />
+      <metainf dir="." includes="*.txt" excludes="design-discussions.txt,tech-debt.txt" />
     </jar>
   </target>
 
