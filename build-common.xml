@@ -1,13 +1,29 @@
-<project xmlns:ivy="antlib:org.apache.ivy.ant" name="common" default="test">
+<project name="common" xmlns:ivy="antlib:org.apache.ivy.ant" default="test">
+
+  <!-- ============================= Initialisation ============================= -->
 
   <target name="-init" description="Ivy-independent initialization">
     <patternset id="metainf-files" includes="*.txt" excludes="design-discussion.txt,tech-debt.txt" />
   </target>
 
-  <target name="-init-ivy" depends="-init" description="Set up Ivy-related paths">
+  <property name="ivy-version" value="2.2.0" />
+  <property name="ivy-install-dir" location="${user.home}/.ivy2/install" />
+  <property name="ivy-jar" location="${ivy-install-dir}/ivy-${ivy-version}.jar" />
+  <available property="ivy-installed" file="${ivy-jar}" />
+  <target name="-bootstrap-ivy" unless="ivy-installed">
+    <mkdir dir="${ivy-install-dir}" />
+    <get src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy-version}/ivy-${ivy-version}.jar"
+      dest="${ivy-jar}" usetimestamp="true" ignoreerrors="false"/>
+  </target>
+  
+  <target name="-load-ivy" depends="-bootstrap-ivy">
+    <taskdef uri="antlib:org.apache.ivy.ant" classpath="${ivy-jar}"/>
+  </target>
+
+  <target name="-init-ivy" depends="-init,-load-ivy" description="Set up Ivy-related paths">
     <dirname property="common.basedir" file="${ant.file.common}" />
     <ivy:settings file="${common.basedir}/ivy-settings.xml" />
-    <ivy:resolve log="download-only" />
+    <ivy:resolve log="error" />
     <ivy:cachepath pathid="ivy.compile-classpath" conf="default" />
     <ivy:cachepath pathid="ivy.test-classpath" conf="test" />
     <property name="module" value="${ant.project.name}" />
@@ -35,14 +51,16 @@
       <ivy:report />
   </target>
 
-  <target name="generate-sources" depends="-init-ivy">
+  <!-- ============================= Java Compile ============================= -->
+
+  <target name="prepare-sources" depends="-init-ivy">
     <exec osfamily="windows" executable="git.cmd" outputproperty="git-describe">
       <arg value="describe" />
     </exec>
     <exec osfamily="unix" executable="git" outputproperty="git-describe">
       <arg value="describe" />
     </exec>
-    <mkdir dir="tmp/generated/java" />
+    <mkdir dir="tmp/generated" />
     <copy todir="tmp/generated">
       <fileset dir="src/template" erroronmissingdir="false" />
       <filterset>
@@ -51,17 +69,48 @@
         <filter token="revision" value="${git-describe}" />
       </filterset>
     </copy>
-  </target>
-
-  <target name="compile-sources" depends="generate-sources" description="compile the module">
     <mkdir dir="tmp/classes" />
     <copy todir="tmp/classes">
       <fileset dir="src/main/resources" erroronmissingdir="false" />
     </copy>
-    <property name="compile-classpath" refid="compile-classpath" />
-    <echo message="Compiling with classpath=${compile-classpath}" />
+  </target>
+
+  <condition property="has-annotation-processors">
+    <isreference refid="annotation-processors" />
+  </condition>
+
+  <target name="compile-annotation-processors" depends="-init-ivy" if="has-annotation-processors"
+      description="Resolve chicken-and-egg problem with compiling annotation processors">
+    <property name="annotation-processors" refid="annotation-processors" />
+    <echo message="annotation-processors=${annotation-processors}" />
+    <mkdir dir="tmp/classes" />
     <javac destdir="tmp/classes" srcdir="src/main/java:tmp/generated/java"
-      classpathref="compile-classpath" includeantruntime="false" debug="true" />
+      classpathref="compile-classpath" includeantruntime="false" debug="true">
+      <compilerarg value="-proc:none" />
+      <patternset refid="annotation-processors" />
+    </javac>
+  </target>
+
+  <target name="set-annotation-processors-pattern" unless="has-annotation-processors"
+      description="Define empty pattern set if there are no annotation processors">
+    <patternset id="annotation-processors" />
+  </target>
+
+  <target name="prepare-annotation-processors"
+      depends="compile-annotation-processors,set-annotation-processors-pattern" />
+
+  <target name="compile-sources" depends="prepare-sources,prepare-annotation-processors"
+      description="compile the module">
+    <mkdir dir="tmp/classes" />
+    <copy todir="tmp/classes">
+      <fileset dir="src/main/resources" erroronmissingdir="false" />
+    </copy>
+    <javac destdir="tmp/classes" srcdir="src/main/java:tmp/generated/java"
+      classpathref="compile-classpath" includeantruntime="false" debug="true">
+      <patternset>
+        <invert><patternset refid="annotation-processors" /></invert>
+      </patternset>
+    </javac>
   </target>
 
   <target name="build-module-jar" depends="compile-sources" description="build the module jar">
@@ -73,7 +122,7 @@
     </jar>
   </target>
 
-  <target name="build-source-jar" depends="generate-sources" description="assemble the sources">
+  <target name="build-source-jar" depends="prepare-sources" description="assemble the sources">
     <mkdir dir="${jars-dir}" />
     <jar file="${source-jar}">
       <fileset dir="src/main/java" />
@@ -85,13 +134,13 @@
     </jar>
   </target>
 
+  <!-- ============================= Java Tests ============================= -->
+
   <target name="build-tests-jar" depends="build-module-jar" description="compile the tests">
     <mkdir dir="tmp/test-classes" />
     <copy todir="tmp/test-classes">
       <fileset dir="src/test/resources" erroronmissingdir="false" />
     </copy>
-    <property name="test-classpath" refid="test-classpath" />
-    <echo message="Building tests with classpath=${test-classpath}" />
     <javac srcdir="src/test/java" destdir="tmp/test-classes"
       classpathref="test-classpath" includeantruntime="false" debug="true" />
     <jar file="${tests-jar}" basedir="tmp/test-classes" />
@@ -115,10 +164,13 @@
     </junit>
   </target>
 
+  <!-- ============================= Publish ============================= -->
+
   <target name="publish-artifacts" depends="-init-ivy">
     <ivy:publish resolver="local" overwrite="true"
       artifactspattern="tmp/artifacts/[type]s/[artifact].[ext]" />
   </target>
+
 
   <target name="clean">
     <delete dir="tmp" />
