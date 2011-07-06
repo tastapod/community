@@ -1,7 +1,9 @@
 <project xmlns:ivy="antlib:org.apache.ivy.ant" name="neo4j-kernel" default="all">
+
   <patternset id="annotation-processors">
     <include name="org/neo4j/kernel/impl/annotations/ServiceProcessor.java" />
     <include name="org/neo4j/kernel/impl/annotations/DocumentationProcessor.java" />
   </patternset>
+
   <import file="../build-common.xml" />
 </project>

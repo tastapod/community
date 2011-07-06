@@ -1,0 +1,10 @@
+<ivy-module version="2.0">
+  <info organisation="org.scala-lang" module="scala" revision="2.9.0-1" />
+  <configurations>
+    <conf name="default" />
+  </configurations>
+  <dependencies>
+    <dependency name="scala-compiler" rev="2.9.0-1" conf="*->@" />
+    <dependency name="scala-library"  rev="2.9.0-1" conf="*->@" />
+  </dependencies>
+</ivy-module>

@@ -1,0 +1,5 @@
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="neo4j-cypher" default="all">
+  <import file="../build-common.xml" />
+
+  <target name="build" depends="build-scala-jar,build-module-jar" />
+</project>
