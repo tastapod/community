@@ -1,0 +1,78 @@
+<project name="common" xmlns:ivy="antlib:org.apache.ivy.ant" default="test">
+
+  <import file="build-common.xml" />
+
+  <!-- ============================= Initialisation ============================= -->
+
+  <target name="-init-scala" depends="-init-ivy" description="Load Scala tasks">
+    <property name="scala-jar" location="${jars-dir}/${module}-scala.jar" />
+    <property name="scala-tests-jar" location="${jars-dir}/${module}-scala-tests.jar" />
+    <taskdef resource="scala/tools/ant/antlib.xml"
+             classpathref="compile-classpath" />
+    <taskdef name="scalatest" classname="org.scalatest.tools.ScalaTestAntTask"
+             classpathref="test-classpath"/>
+  </target>
+
+  <!-- ============================= Compile ============================= -->
+
+  <target name="compile-scala" depends="-init-scala" description="Compile Scala files">
+    <mkdir dir="tmp/scala-classes" />
+    <scalac srcdir="src/main/scala"
+         destdir="tmp/scala-classes"
+         classpathref="compile-classpath" />
+  </target>
+
+  <target name="build-scala-jar" depends="compile-scala">
+    <mkdir dir="${jars-dir}" />
+    <jar file="${scala-jar}" basedir="tmp/scala-classes">
+      <metainf dir=".">
+        <patternset refid="metainf-files" />
+      </metainf>
+    </jar>
+  </target>
+
+  <target name="-copy-scala-classes">
+    <mkdir dir="tmp/classes" />
+    <copy todir="tmp/classes">
+      <fileset dir="tmp/scala-classes" erroronmissingdir="false" />
+    </copy>
+  </target>
+
+  <target name="compile-java" depends="-copy-scala-classes,common.compile-java" />
+
+  <target name="build-scala-tests-jar" depends="build-scala-jar">
+    <mkdir dir="tmp/scala-test-classes" />
+    <copy todir="tmp/scala-test-classes">
+      <fileset dir="src/test/resources" erroronmissingdir="false" />
+    </copy>
+    <scalac srcdir="src/test/scala"
+         destdir="tmp/scala-test-classes"
+         classpathref="test-classpath" />
+    <jar file="${scala-tests-jar}" basedir="tmp/scala-test-classes" />
+  </target>
+
+  <target name="run-scala-tests" depends="build-scala-tests-jar">
+    <echo message="Running Scala tests!" />
+    <mkdir dir="tmp/reports" />
+    <scalatest haltonfailure="yes" fork="true" parallel="true">
+      <wildcard package="org.neo4j.cypher" />
+      <runpath>
+        <path refid="test-classpath" />
+        <pathelement location="${scala-tests-jar}" />
+      </runpath>
+      <reporter type="file" filename="tmp/reports/scalatest.txt" />
+      <reporter type="stdout" />
+      <jvmarg value="-Xmx1024m"/>
+      <jvmarg value="-XX:MaxPermSize=256m"/>
+    </scalatest>
+  </target>
+
+  <!-- Overrides of composite targets -->
+  <target name="run-tests" depends="common.run-tests,run-scala-tests" />
+
+  <target name="build" depends="build-module-jar,build-scala-jar" />
+  <target name="test" depends="build-scala-tests-jar,run-tests" />
+  <target name="publish" depends="build,build-tests-jar,build-source-jar,publish-artifacts" />
+  <target name="all" depends="build,test,publish" />
+  <target name="rebuild" depends="clean,build" />
+</project>

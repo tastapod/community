@@ -36,7 +36,6 @@
     <property name="module-jar" location="${jars-dir}/${module}.jar" />
     <property name="source-jar" location="${jars-dir}/${module}-source.jar" />
     <property name="tests-jar" location="${jars-dir}/${module}-tests.jar" />
-    <property name="scala-jar" location="${jars-dir}/${module}-scala.jar" />
     <path id="compile-classpath">
       <path refid="ivy.compile-classpath" />
       <pathelement location="${java.home}/../lib/tools.jar" />
@@ -55,7 +54,7 @@
       <ivy:report />
   </target>
 
-  <!-- ============================= Java Compile ============================= -->
+  <!-- ============================= Compile ============================= -->
 
   <target name="prepare-sources" depends="-init-ivy">
     <exec osfamily="windows" executable="git.cmd" outputproperty="git-describe">
@@ -109,9 +108,7 @@
   <target name="compile-java" depends="prepare-sources,prepare-annotation-processors"
       description="compile the module">
     <mkdir dir="tmp/classes" />
-    <copy todir="tmp/classes">
-      <fileset dir="src/main/resources" erroronmissingdir="false" />
-    </copy>
+    <mkdir dir="tmp/generated/java" />
     <javac destdir="tmp/classes"
            srcdir="src/main/java:tmp/generated/java"
            classpathref="compile-classpath"
@@ -144,7 +141,7 @@
     </jar>
   </target>
 
-  <!-- ============================= Java Tests ============================= -->
+  <!-- ============================= Test ============================= -->
 
   <target name="build-tests-jar" depends="build-module-jar" description="compile the tests">
     <mkdir dir="tmp/test-classes" />
@@ -172,45 +169,13 @@
       </classpath>
       <formatter type="plain"/>
       <batchtest fork="yes" todir="tmp/reports">
-        <fileset dir="src/test/java">
-          <include name="**/Test*.java"/>
-          <include name="**/*Tests.java"/>
+        <fileset dir="tmp/test-classes">
+          <include name="**/Test*.class"/>
+          <include name="**/*Tests.class"/>
+          <exclude name="**/*$*.class" />
         </fileset>
       </batchtest>
     </junit>
-  </target>
-
-  <!-- ============================= Compile Scala ============================= -->
-
-  <available property="has-scala" file="src/main/scala" />
-  <target name="-load-scala" depends="-init-ivy" if="has-scala"
-          description="Load Scala tasks">
-    <ivy:resolve file="${common-basedir}/ivy-scala.xml" resolveId="scala" log="quiet" />
-    <ivy:cachepath pathid="ivy.scala-path" conf="default" resolveId="scala" />
-    <property name="blah" refid="ivy.scala-path" />
-    <echo message="blah=${blah}" />
-    <taskdef resource="scala/tools/ant/antlib.xml" classpathref="ivy.scala-path" />
-    <path id="scala-compile-classpath">
-      <path refid="ivy.scala-path" />
-      <path refid="compile-classpath" />
-    </path>
-  </target>
-
-  <target name="compile-scala" depends="-load-scala" if="has-scala"
-      description="Compile Scala files">
-    <mkdir dir="tmp/classes" />
-    <scalac srcdir="src/main/scala"
-            destdir="tmp/classes"
-            classpathref="scala-compile-classpath" />
-  </target>
-
-  <target name="build-scala-jar" depends="compile-scala" if="has-scala">
-    <mkdir dir="${jars-dir}" />
-    <jar file="${scala-jar}" basedir="tmp/scala-classes">
-      <metainf dir=".">
-        <patternset refid="metainf-files" />
-      </metainf>
-    </jar>
   </target>
 
   <!-- ============================= Publish ============================= -->

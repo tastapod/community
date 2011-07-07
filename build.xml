@@ -1,5 +1,5 @@
 <project name="neo4j" default="all">
-  <property name="modules" value="kernel:jmx:udc:lucene-index:graph-algo:graph-matching" />
+  <property name="modules" value="kernel:jmx:udc:lucene-index:graph-algo:graph-matching:cypher" />
   <property name="verbose-subant" value="true" />
 
   <target name="all">
