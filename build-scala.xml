@@ -7,6 +7,8 @@
   <target name="-init-scala" depends="-init-ivy" description="Load Scala tasks">
     <property name="scala-jar" location="${jars-dir}/${module}-scala.jar" />
     <property name="scala-tests-jar" location="${jars-dir}/${module}-scala-tests.jar" />
+    <property name="scala-source-jar" location="${jars-dir}/${module}-scala-source.jar" />
+    <property name="scaladoc-jar" location="${jars-dir}/${module}-scaladoc.jar" />
     <taskdef resource="scala/tools/ant/antlib.xml"
              classpathref="compile-classpath" />
     <taskdef name="scalatest" classname="org.scalatest.tools.ScalaTestAntTask"
@@ -20,6 +22,7 @@
     <scalac srcdir="src/main/scala"
          destdir="tmp/scala-classes"
          classpathref="compile-classpath" />
+    <mkdir dir="tmp/classes" />
   </target>
 
   <target name="build-scala-jar" depends="compile-scala">
@@ -32,8 +35,8 @@
   </target>
 
   <target name="-copy-scala-classes">
-    <mkdir dir="tmp/classes" />
-    <copy todir="tmp/classes">
+    <mkdir dir="tmp/supporting-classes" />
+    <copy todir="tmp/supporting-classes">
       <fileset dir="tmp/scala-classes" erroronmissingdir="false" />
     </copy>
   </target>
@@ -51,6 +54,8 @@
     <jar file="${scala-tests-jar}" basedir="tmp/scala-test-classes" />
   </target>
 
+  <!-- ============================= Test ============================= -->
+
   <target name="run-scala-tests" depends="build-scala-tests-jar">
     <echo message="Running Scala tests!" />
     <mkdir dir="tmp/reports" />
@@ -67,12 +72,30 @@
     </scalatest>
   </target>
 
+  <!-- ============================= Source ============================= -->
+
+  <target name="build-scala-source-jar" depends="-init-scala">
+    <mkdir dir="${jars-dir}" />
+    <jar file="${scala-source-jar}" basedir="src/main/scala" />
+  </target>
+
+  <target name="build-scaladoc-jar" depends="build">
+    <mkdir dir="${jars-dir}" />
+    <mkdir dir="tmp/scaladoc" />
+    <scaladoc srcdir="src/main/scala"
+              destdir="tmp/scaladoc">
+      <classpath>
+        <path refid="test-classpath" />
+        <pathelement location="${scala-jar}" />
+      </classpath>
+   </scaladoc>
+    <jar file="${scaladoc-jar}" basedir="tmp/scaladoc" />
+  </target>
+
   <!-- Overrides of composite targets -->
   <target name="run-tests" depends="common.run-tests,run-scala-tests" />
 
   <target name="build" depends="build-module-jar,build-scala-jar" />
   <target name="test" depends="build-scala-tests-jar,run-tests" />
-  <target name="publish" depends="build,build-tests-jar,build-source-jar,publish-artifacts" />
-  <target name="all" depends="build,test,publish" />
-  <target name="rebuild" depends="clean,build" />
+  <target name="publish" depends="build-scaladoc-jar,build-scala-source-jar,common.publish" />
 </project>

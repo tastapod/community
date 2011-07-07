@@ -7,6 +7,7 @@
   <publications>
     <artifact name="${ivy.module}" conf="default" />
     <artifact name="${ivy.module}-source" conf="default" />
+    <artifact name="${ivy.module}-javadoc" conf="default" />
     <artifact name="${ivy.module}-tests" conf="test" />
   </publications>
   <dependencies>

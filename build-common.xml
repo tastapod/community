@@ -34,10 +34,12 @@
     <!-- TODO build in target rather than tmp once build is good -->
     <property name="jars-dir" value="tmp/artifacts/jars" />
     <property name="module-jar" location="${jars-dir}/${module}.jar" />
-    <property name="source-jar" location="${jars-dir}/${module}-source.jar" />
     <property name="tests-jar" location="${jars-dir}/${module}-tests.jar" />
+    <property name="source-jar" location="${jars-dir}/${module}-source.jar" />
+    <property name="javadoc-jar" location="${jars-dir}/${module}-javadoc.jar" />
     <path id="compile-classpath">
       <path refid="ivy.compile-classpath" />
+      <pathelement location="tmp/supporting-classes" />
       <pathelement location="${java.home}/../lib/tools.jar" />
     </path>
     <path id="test-classpath">
@@ -54,7 +56,7 @@
       <ivy:report />
   </target>
 
-  <!-- ============================= Compile ============================= -->
+  <!-- ============================= Code gen ============================= -->
 
   <target name="prepare-sources" depends="-init-ivy">
     <exec osfamily="windows" executable="git.cmd" outputproperty="git-describe">
@@ -78,6 +80,8 @@
     </copy>
   </target>
 
+  <!-- ============================= Compile ============================= -->
+
   <condition property="has-annotation-processors">
     <isreference refid="annotation-processors" />
   </condition>
@@ -87,6 +91,7 @@
     <property name="annotation-processors" refid="annotation-processors" />
     <echo message="annotation-processors=${annotation-processors}" />
     <mkdir dir="tmp/classes" />
+    <mkdir dir="tmp/supporting-classes" />
     <javac destdir="tmp/classes"
            srcdir="src/main/java:tmp/generated/java"
            classpathref="compile-classpath"
@@ -123,18 +128,6 @@
   <target name="build-module-jar" depends="compile-java" description="build the module jar">
     <mkdir dir="${jars-dir}" />
     <jar file="${module-jar}" basedir="tmp/classes">
-      <metainf dir=".">
-        <patternset refid="metainf-files" />
-      </metainf>
-    </jar>
-  </target>
-
-  <target name="build-source-jar" depends="prepare-sources" description="assemble the sources">
-    <mkdir dir="${jars-dir}" />
-    <jar file="${source-jar}">
-      <fileset dir="src/main/java" />
-      <fileset dir="src/main/resources" erroronmissingdir="false" />
-      <fileset dir="tmp/generated/java" erroronmissingdir="false" />
       <metainf dir=".">
         <patternset refid="metainf-files" />
       </metainf>
@@ -178,6 +171,30 @@
     </junit>
   </target>
 
+  <!-- ============================= Sources ============================= -->
+
+  <target name="build-source-jar" depends="prepare-sources" description="assemble the sources">
+    <mkdir dir="${jars-dir}" />
+    <jar file="${source-jar}">
+      <fileset dir="src/main/java" />
+      <fileset dir="src/main/resources" erroronmissingdir="false" />
+      <fileset dir="tmp/generated/java" erroronmissingdir="false" />
+      <metainf dir=".">
+        <patternset refid="metainf-files" />
+      </metainf>
+    </jar>
+  </target>
+
+  <target name="build-javadoc-jar" depends="-init-ivy">
+    <mkdir dir="tmp/javadoc" />
+    <property name="cc" refid="compile-classpath" /><echo message="Classpath=${cc}" />
+    <javadoc sourcepath="src/main/java"
+             destdir="tmp/javadoc"
+             packagenames="org.neo4j.*"
+             classpathref="test-classpath"
+             verbose="false" />
+  </target>
+
   <!-- ============================= Publish ============================= -->
 
   <target name="publish-artifacts" depends="-init-ivy">
@@ -196,7 +213,7 @@
 
   <target name="build" depends="build-module-jar" />
   <target name="test" depends="build-tests-jar,run-tests" />
-  <target name="publish" depends="build,build-tests-jar,build-source-jar,publish-artifacts" />
+  <target name="publish" depends="build,build-tests-jar,build-source-jar,build-javadoc-jar,publish-artifacts" />
   <target name="all" depends="build,test,publish" />
   <target name="rebuild" depends="clean,build" />
 </project>

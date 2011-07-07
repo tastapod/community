@@ -8,6 +8,7 @@
     <artifact name="${ivy.module}" conf="default" />
     <artifact name="${ivy.module}-scala" conf="default" />
     <artifact name="${ivy.module}-source" conf="default" />
+    <artifact name="${ivy.module}-javadoc" conf="default" />
     <artifact name="${ivy.module}-scala-tests" conf="test" />
     <artifact name="${ivy.module}-tests" conf="test" />
   </publications>
