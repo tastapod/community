@@ -1,0 +1,3 @@
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="neo4j-shell" default="all">
+  <import file="../build-common.xml" />
+</project>
