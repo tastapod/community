@@ -35,8 +35,8 @@
   </target>
 
   <target name="-copy-scala-classes">
-    <mkdir dir="tmp/supporting-classes" />
-    <copy todir="tmp/supporting-classes">
+    <mkdir dir="tmp/auxiliary-classes" />
+    <copy todir="tmp/auxiliary-classes">
       <fileset dir="tmp/scala-classes" erroronmissingdir="false" />
     </copy>
   </target>

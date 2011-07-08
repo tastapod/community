@@ -6,9 +6,10 @@
   </configurations>
   <publications>
     <artifact name="${ivy.module}" conf="default" />
-    <artifact name="${ivy.module}-source" conf="default" />
+    <artifact name="${ivy.module}-sources" conf="default" />
     <artifact name="${ivy.module}-javadoc" conf="default" />
     <artifact name="${ivy.module}-tests" conf="test" />
+    <artifact name="${ivy.module}-test-sources" conf="test" />
   </publications>
   <dependencies>
     <dependency org="javax.transaction" name="jta" rev="1.1" conf="default" />

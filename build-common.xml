@@ -35,11 +35,12 @@
     <property name="jars-dir" value="tmp/artifacts/jars" />
     <property name="module-jar" location="${jars-dir}/${module}.jar" />
     <property name="tests-jar" location="${jars-dir}/${module}-tests.jar" />
-    <property name="source-jar" location="${jars-dir}/${module}-source.jar" />
+    <property name="sources-jar" location="${jars-dir}/${module}-sources.jar" />
+    <property name="test-sources-jar" location="${jars-dir}/${module}-test-sources.jar" />
     <property name="javadoc-jar" location="${jars-dir}/${module}-javadoc.jar" />
     <path id="compile-classpath">
       <path refid="ivy.compile-classpath" />
-      <pathelement location="tmp/supporting-classes" />
+      <pathelement location="tmp/auxiliary-classes" />
       <pathelement location="${java.home}/../lib/tools.jar" />
     </path>
     <path id="test-classpath">
@@ -90,9 +91,8 @@
       description="Resolve chicken-and-egg problem with compiling annotation processors">
     <property name="annotation-processors" refid="annotation-processors" />
     <echo message="annotation-processors=${annotation-processors}" />
-    <mkdir dir="tmp/classes" />
-    <mkdir dir="tmp/supporting-classes" />
-    <javac destdir="tmp/classes"
+    <mkdir dir="tmp/auxiliary-classes" />
+    <javac destdir="tmp/auxiliary-classes"
            srcdir="src/main/java:tmp/generated/java"
            classpathref="compile-classpath"
            includeantruntime="false"
@@ -118,11 +118,7 @@
            srcdir="src/main/java:tmp/generated/java"
            classpathref="compile-classpath"
            includeantruntime="false"
-           debug="true">
-      <patternset>
-        <invert><patternset refid="annotation-processors" /></invert>
-      </patternset>
-    </javac>
+           debug="true" />
   </target>
 
   <target name="build-module-jar" depends="compile-java" description="build the module jar">
@@ -173,15 +169,23 @@
 
   <!-- ============================= Sources ============================= -->
 
-  <target name="build-source-jar" depends="prepare-sources" description="assemble the sources">
+  <target name="build-sources-jar" depends="prepare-sources" description="assemble the sources">
     <mkdir dir="${jars-dir}" />
-    <jar file="${source-jar}">
+    <jar file="${sources-jar}">
       <fileset dir="src/main/java" />
       <fileset dir="src/main/resources" erroronmissingdir="false" />
       <fileset dir="tmp/generated/java" erroronmissingdir="false" />
       <metainf dir=".">
         <patternset refid="metainf-files" />
       </metainf>
+    </jar>
+  </target>
+
+  <target name="build-test-sources-jar" description="assemble the test sources">
+    <mkdir dir="${jars-dir}" />
+    <jar file="${test-sources-jar}">
+      <fileset dir="src/test/java" />
+      <fileset dir="src/test/resources" erroronmissingdir="false" />
     </jar>
   </target>
 
@@ -193,6 +197,7 @@
              packagenames="org.neo4j.*"
              classpathref="test-classpath"
              verbose="false" />
+    <jar file="${javadoc-jar}" basedir="tmp/javadoc" />
   </target>
 
   <!-- ============================= Publish ============================= -->
@@ -213,7 +218,7 @@
 
   <target name="build" depends="build-module-jar" />
   <target name="test" depends="build-tests-jar,run-tests" />
-  <target name="publish" depends="build,build-tests-jar,build-source-jar,build-javadoc-jar,publish-artifacts" />
+  <target name="publish" depends="build,build-tests-jar,build-sources-jar,build-test-sources-jar,build-javadoc-jar,publish-artifacts" />
   <target name="all" depends="build,test,publish" />
   <target name="rebuild" depends="clean,build" />
 </project>
