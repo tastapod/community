@@ -198,6 +198,7 @@
     <javadoc sourcepath="src/main/java"
              destdir="tmp/javadoc"
              packagenames="org.neo4j.*"
+             excludepackagenames="*.impl.*:org.neo4j.ext.udc:org.neo4j.kernel.ha:org.neo4j.kernel.ha.*:org.neo4j.com:org.neo4j.com.*"
              classpathref="test-classpath"
              verbose="false" />
     <jar file="${javadoc-jar}" basedir="tmp/javadoc" />

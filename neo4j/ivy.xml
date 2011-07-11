@@ -1,0 +1,17 @@
+<ivy-module version="2.0">
+  <info organisation="org.neo4j" module="neo4j" revision="21" />
+  <configurations>
+    <conf name="default" />
+    <conf name="test" extends="default" />
+  </configurations>
+  <publications>
+  </publications>
+  <dependencies defaultconf="*->@">
+    <dependency name="neo4j-kernel" rev="21" />
+    <dependency name="neo4j-lucene-index" rev="21" />
+    <dependency name="neo4j-graph-algo" rev="21" />
+    <dependency name="neo4j-graph-matching" rev="21" />
+    <dependency name="neo4j-jmx" rev="21" />
+    <dependency name="neo4j-udc" rev="21" />
+  </dependencies>
+</ivy-module>
