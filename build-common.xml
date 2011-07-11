@@ -132,7 +132,9 @@
 
   <!-- ============================= Test ============================= -->
 
-  <target name="build-tests-jar" depends="build-module-jar" description="compile the tests">
+  <available property="has-java-tests" file="src/test/java" />
+
+  <target name="build-tests-jar" depends="build-module-jar" if="has-java-tests">
     <mkdir dir="tmp/test-classes" />
     <copy todir="tmp/test-classes">
       <fileset dir="src/test/resources" erroronmissingdir="false" />
@@ -145,7 +147,7 @@
     <jar file="${tests-jar}" basedir="tmp/test-classes" />
   </target>
 
-  <target name="run-tests" depends="build-tests-jar" description="run the tests">
+  <target name="run-tests" depends="build-tests-jar" if="has-java-tests">
     <mkdir dir="tmp/reports" />
     <mkdir dir="target/test-data" />
     <mkdir dir="target/var" />
@@ -182,7 +184,7 @@
     </jar>
   </target>
 
-  <target name="build-test-sources-jar" description="assemble the test sources">
+  <target name="build-test-sources-jar" if="has-java-tests">
     <mkdir dir="${jars-dir}" />
     <jar file="${test-sources-jar}">
       <fileset dir="src/test/java" />

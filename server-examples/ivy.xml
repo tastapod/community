@@ -1,0 +1,19 @@
+<ivy-module version="2.0">
+  <info organisation="org.neo4j" module="neo4j-server-examples" revision="21" />
+  <configurations>
+    <conf name="default" />
+    <conf name="test" extends="default" />
+  </configurations>
+  <publications>
+    <artifact name="${ivy.module}" conf="default" />
+    <artifact name="${ivy.module}-sources" conf="default" />
+    <artifact name="${ivy.module}-javadoc" conf="default" />
+  </publications>
+  <dependencies>
+    <dependency name="neo4j-kernel" rev="21" conf="*->@"/>
+    <dependency name="neo4j-server-api" rev="21" conf="*->@"/>
+    <dependency name="neo4j-graph-algo" rev="21" conf="*->@"/>
+    <dependency org="com.sun.jersey" name="jersey-core" rev="1.4" conf="default" />
+    <dependency org="com.sun.jersey" name="jersey-client" rev="1.3" conf="default" />
+  </dependencies>
+</ivy-module>
