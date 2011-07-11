@@ -1,5 +1,6 @@
 <ivysettings>
   <settings defaultResolver="with-local-m2"/>
+  <caches useOrigin="true" />
   <!-- TODO reintroduce these once we can build from just the ~/.m2 Maven cache -->
   <!--
   <include url="${ivy.default.settings.dir}/ivysettings-public.xml"/>
