@@ -1,4 +1,4 @@
-<project xmlns:ivy="antlib:org.apache.ivy.ant" name="neo4j-kernel" default="all">
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="neo4j-kernel" default="dist">
 
   <patternset id="annotation-processors">
     <include name="org/neo4j/kernel/impl/annotations/ServiceProcessor.java" />

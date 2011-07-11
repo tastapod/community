@@ -1,9 +1,9 @@
-<project name="neo4j" default="all">
+<project name="neo4j" default="dist">
   <property name="modules" value="kernel:jmx:udc:lucene-index:graph-algo:graph-matching:cypher" />
   <property name="verbose-subant" value="true" />
 
-  <target name="all">
-    <subant target="all" verbose="${verbose-subant}" buildpath="${modules}" />
+  <target name="dist">
+    <subant target="dist" verbose="${verbose-subant}" buildpath="${modules}" />
   </target>
 
   <target name="clean">

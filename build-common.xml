@@ -219,6 +219,6 @@
   <target name="build" depends="build-module-jar" />
   <target name="test" depends="build-tests-jar,run-tests" />
   <target name="publish" depends="build,build-tests-jar,build-sources-jar,build-test-sources-jar,build-javadoc-jar,publish-artifacts" />
-  <target name="all" depends="build,test,publish" />
+  <target name="dist" depends="build,test,publish" />
   <target name="rebuild" depends="clean,build" />
 </project>
