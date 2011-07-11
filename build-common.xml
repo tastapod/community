@@ -26,7 +26,7 @@
   <target name="-init-ivy" depends="-init,-load-ivy" description="Set up Ivy-related paths">
     <dirname property="common-basedir" file="${ant.file.common}" />
     <ivy:settings file="${common-basedir}/ivy-settings.xml" />
-    <ivy:resolve resolveId="main" log="quiet" />
+    <ivy:resolve log="quiet" />
     <ivy:cachepath pathid="ivy.compile-classpath" conf="default" />
     <ivy:cachepath pathid="ivy.test-classpath" conf="test" />
     <property name="module" value="${ant.project.name}" />
@@ -160,6 +160,7 @@
       <batchtest fork="yes" todir="tmp/reports">
         <fileset dir="tmp/test-classes">
           <include name="**/Test*.class"/>
+          <include name="**/*Test.class"/>
           <include name="**/*Tests.class"/>
           <exclude name="**/*$*.class" />
         </fileset>
@@ -203,7 +204,6 @@
   <!-- ============================= Publish ============================= -->
 
   <target name="publish-artifacts" depends="-init-ivy">
-    <ivy:resolve log="quiet" />
     <echo message="Publishing ${ivy.module}" />
     <ivy:publish resolver="local"
                  overwrite="true"
