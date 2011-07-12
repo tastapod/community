@@ -12,9 +12,9 @@
     <artifact name="${ivy.module}-test-sources" conf="test" />
   </publications>
   <dependencies>
-    <dependency name="neo4j-graph-algo" rev="21" conf="*->@"/>
-    <dependency name="neo4j-jmx" rev="21" conf="*->@"/>
-    <dependency name="neo4j-cypher" rev="21" conf="*->@"/>
-    <dependency org="org.jruby" name="jruby-complete" rev="1.5.6" conf="*->default"/>
+    <dependency name="neo4j-graph-algo" rev="21" conf="*->@" />
+    <dependency name="neo4j-jmx" rev="21" conf="*->@" />
+    <dependency name="neo4j-cypher" rev="21" conf="*->@" />
+    <dependency org="org.jruby" name="jruby-complete" rev="1.5.6" conf="*->default" />
   </dependencies>
 </ivy-module>

@@ -12,7 +12,7 @@
     <artifact name="${ivy.module}-test-sources" conf="test" />
   </publications>
   <dependencies>
-    <dependency name="neo4j-kernel" rev="21" conf="*->@"/>
-    <dependency org="org.apache.lucene" name="lucene-core" rev="3.1.0" conf="default"/>
+    <dependency name="neo4j-kernel" rev="21" conf="*->@" />
+    <dependency org="org.apache.lucene" name="lucene-core" rev="3.1.0" conf="default" />
   </dependencies>
 </ivy-module>
