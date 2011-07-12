@@ -1,5 +1,9 @@
 <project name="neo4j" default="dist">
-  <property name="modules" value="kernel:jmx:udc:lucene-index:graph-algo:graph-matching:cypher" />
+  <property name="core-modules" value="kernel:jmx:udc:lucene-index:graph-algo:graph-matching:cypher" />
+  <property name="server-modules" value="server-api:server-examples" />
+  <property name="virtual-modules" value="neo4j:neo4j-community" />
+  <property name="modules" value="${core-modules}:${server-modules}:${virtual-modules}" />
+
   <property name="verbose-subant" value="true" />
 
   <target name="dist">
