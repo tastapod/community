@@ -27,7 +27,7 @@ import java.net.URI;
 import org.junit.Test;
 
 
-public class SerializerTest
+public class TestSerializer
 {
     
     @Test 

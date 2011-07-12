@@ -7,12 +7,18 @@
       <include name="*.txt" />
       <exclude name="design-discussion.txt,tech-debt.txt" />
     </patternset>
+    <patternset id="test-classes">
+      <include name="**/Test*.class"/>
+      <include name="**/*Tests.class"/>
+      <exclude name="**/*$*.class" />
+    </patternset>
   </target>
 
   <property name="ivy-version" value="2.2.0" />
   <property name="ivy-install-dir" location="${user.home}/.ivy2/install" />
   <property name="ivy-jar" location="${ivy-install-dir}/ivy-${ivy-version}.jar" />
   <available property="ivy-installed" file="${ivy-jar}" />
+
   <target name="-bootstrap-ivy" unless="ivy-installed">
     <mkdir dir="${ivy-install-dir}" />
     <get src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy-version}/ivy-${ivy-version}.jar"
@@ -161,10 +167,7 @@
       <formatter type="plain"/>
       <batchtest fork="yes" todir="tmp/reports">
         <fileset dir="tmp/test-classes">
-          <include name="**/Test*.class"/>
-          <include name="**/*Test.class"/>
-          <include name="**/*Tests.class"/>
-          <exclude name="**/*$*.class" />
+          <patternset refid="test-classes" />
         </fileset>
       </batchtest>
     </junit>
